@@ -268,7 +268,7 @@ static uint qt_create_qhash_seed()
 /*
     The QHash seed itself.
 */
-Q_CORE_EXPORT QBasicAtomicInt qt_qhash_seed = Q_BASIC_ATOMIC_INITIALIZER(-1);
+Q_CORE_EXPORT QBasicAtomicInt qt_qhash_seed = Q_BASIC_ATOMIC_INITIALIZER(0);
 
 /*!
     \internal
