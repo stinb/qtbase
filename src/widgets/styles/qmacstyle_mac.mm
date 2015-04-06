@@ -103,6 +103,10 @@ public:
 private:
     NSAutoreleasePool *pool;
 };
+
+QWindow *getWindow(const QWidget *widget) {
+    return widget ? widget->window()->windowHandle() : 0;
+}
 }
 
 @interface QT_MANGLE_NAMESPACE(NotificationReceiver) : NSObject {
@@ -3141,7 +3145,7 @@ QPixmap QMacStyle::standardPixmap(StandardPixmap standardPixmap, const QStyleOpt
             size = 64;
             break;
     }
-    return icon.pixmap(size, size);
+    return icon.pixmap(getWindow(widget), QSize(size, size));
 }
 
 void QMacStyle::setFocusRectPolicy(QWidget *w, FocusRectPolicy policy)
@@ -3701,7 +3705,8 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                 QIcon::Mode mode = QIcon::Disabled;
                 if (opt->state & State_Enabled)
                     mode = QIcon::Normal;
-                QPixmap pixmap = header->icon.pixmap(proxy()->pixelMetric(PM_SmallIconSize), mode);
+                int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
+                QPixmap pixmap = header->icon.pixmap(getWindow(w), QSize(iconExtent, iconExtent), mode);
 
                 QRect pixr = header->rect;
                 pixr.setY(header->rect.center().y() - (pixmap.height() / pixmap.devicePixelRatio() - 1) / 2);
@@ -3753,7 +3758,9 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                                                                             : QIcon::Disabled;
                         QIcon::State iconState = (tb->state & State_On) ? QIcon::On
                                                                          : QIcon::Off;
-                        QPixmap pixmap = tb->icon.pixmap(tb->rect.size().boundedTo(tb->iconSize), iconMode, iconState);
+                        QPixmap pixmap = tb->icon.pixmap(getWindow(w),
+                                                         tb->rect.size().boundedTo(tb->iconSize),
+                                                         iconMode, iconState);
 
                         // Draw the text if it's needed.
                         if (tb->toolButtonStyle != Qt::ToolButtonIconOnly) {
@@ -4084,7 +4091,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                         QIcon::State state = QIcon::Off;
                         if (btn.state & State_On)
                             state = QIcon::On;
-                        QPixmap pixmap = btn.icon.pixmap(btn.iconSize, mode, state);
+                        QPixmap pixmap = btn.icon.pixmap(getWindow(w), btn.iconSize, mode, state);
                         int pixmapWidth = pixmap.width() / pixmap.devicePixelRatio();
                         int pixmapHeight = pixmap.height() / pixmap.devicePixelRatio();
                         contentW += pixmapWidth + QMacStylePrivate::PushButtonContentPadding;
@@ -4537,7 +4544,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                 if (const QComboBox *comboBox = qobject_cast<const QComboBox *>(w)) {
                     iconSize = comboBox->iconSize();
                 }
-                QPixmap pixmap = mi->icon.pixmap(iconSize, mode);
+                QPixmap pixmap = mi->icon.pixmap(getWindow(w), iconSize, mode);
                 int pixw = pixmap.width() / pixmap.devicePixelRatio();
                 int pixh = pixmap.height() / pixmap.devicePixelRatio();
                 QRect cr(xpos, contentRect.y(), checkcol, contentRect.height());
@@ -4642,10 +4649,11 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             }
 
             if (!mi->icon.isNull()) {
+                int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
                 drawItemPixmap(p, mi->rect,
                                   Qt::AlignCenter | Qt::TextHideMnemonic | Qt::TextDontClip
                                   | Qt::TextSingleLine,
-                                  mi->icon.pixmap(proxy()->pixelMetric(PM_SmallIconSize),
+                                  mi->icon.pixmap(getWindow(w), QSize(iconExtent, iconExtent),
                           (mi->state & State_Enabled) ? QIcon::Normal : QIcon::Disabled));
             } else {
                 drawItemText(p, mi->rect,
@@ -5889,9 +5897,11 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                         x += iw;
                     else
                         x += br.width() / 2 - p->fontMetrics().width(titlebar->text) / 2;
-                    if (iw)
+                    if (iw) {
+                        int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
                         p->drawPixmap(x - iw, y,
-                                      titlebar->icon.pixmap(proxy()->pixelMetric(PM_SmallIconSize), QIcon::Normal));
+                                      titlebar->icon.pixmap(getWindow(widget), QSize(iconExtent, iconExtent), QIcon::Normal));
+                    }
                     drawItemText(p, br, Qt::AlignCenter, opt->palette, tds == kThemeStateActive,
                                     titlebar->text, QPalette::Text);
                     p->restore();
