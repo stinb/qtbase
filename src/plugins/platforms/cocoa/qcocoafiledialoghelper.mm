@@ -134,6 +134,12 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(QNSOpenSavePanelDelegate);
     QString selectedVisualNameFilter = mOptions->initiallySelectedNameFilter();
     mSelectedNameFilter = new QStringList([self findStrippedFilterWithVisualFilterName:selectedVisualNameFilter]);
 
+    [mSavePanel setTitle:QCFString::toNSString(options->windowTitle())];
+    [self createPopUpButton:selectedVisualNameFilter hideDetails:options->testOption(QFileDialogOptions::HideNameFilterDetails)];
+    [self createTextField];
+    [self createAccessory];
+    [mSavePanel setAccessoryView:mNameFilterDropDownList->size() > 1 ? mAccessoryView : nil];
+
     QFileInfo sel(selectFile);
     if (sel.isDir() && !sel.isBundle()){
         mCurrentDir = [QCFString::toNSString(sel.absoluteFilePath()) retain];
@@ -142,13 +148,6 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(QNSOpenSavePanelDelegate);
         mCurrentDir = [QCFString::toNSString(sel.absolutePath()) retain];
         mCurrentSelection = new QString(sel.absoluteFilePath());
     }
-
-    [mSavePanel setTitle:QCFString::toNSString(options->windowTitle())];
-    [self createPopUpButton:selectedVisualNameFilter hideDetails:options->testOption(QFileDialogOptions::HideNameFilterDetails)];
-    [self createTextField];
-    [self createAccessory];
-    [mSavePanel setAccessoryView:mNameFilterDropDownList->size() > 1 ? mAccessoryView : nil];
-
 
     if (mOptions->isLabelExplicitlySet(QFileDialogOptions::Accept))
         [mSavePanel setPrompt:[self strip:options->labelText(QFileDialogOptions::Accept)]];
