@@ -50,6 +50,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QMimeData>
 #include <QtCore/QStringList>
+#include <QtCore/QThread>
 #include <QtCore/QVariant>
 #include <QtCore/QUrl>
 
@@ -318,23 +319,27 @@ void QWindowsClipboard::setMimeData(QMimeData *mimeData, QClipboard::Mode mode)
             m_data = new QWindowsOleDataObject(mimeData);
     }
 
-    const HRESULT src = OleSetClipboard(m_data);
-    if (src != S_OK) {
-        QString mimeDataFormats = mimeData ?
-            mimeData->formats().join(QLatin1String(", ")) : QString(QStringLiteral("NULL"));
-        qErrnoWarning("OleSetClipboard: Failed to set mime data (%s) on clipboard: %s",
-                      qPrintable(mimeDataFormats),
-                      QWindowsContext::comErrorString(src).constData());
-        releaseIData();
-        return;
+    HRESULT src;
+    for (int i = 0; i < 10; ++i) {
+        if (i > 0)
+          QThread::msleep(100);
+
+        src = OleSetClipboard(m_data);
+        if (src == S_OK)
+            return;
     }
+
+    QString mimeDataFormats = mimeData ?
+        mimeData->formats().join(QLatin1String(", ")) : QString(QStringLiteral("NULL"));
+    qErrnoWarning("OleSetClipboard: Failed to set mime data (%s) on clipboard: %s",
+                  qPrintable(mimeDataFormats),
+                  QWindowsContext::comErrorString(src).constData());
+    releaseIData();
 }
 
 void QWindowsClipboard::clear()
 {
-    const HRESULT src = OleSetClipboard(0);
-    if (src != S_OK)
-        qErrnoWarning("OleSetClipboard: Failed to clear the clipboard: 0x%lx", src);
+    setMimeData(0);
 }
 
 bool QWindowsClipboard::supportsMode(QClipboard::Mode mode) const
