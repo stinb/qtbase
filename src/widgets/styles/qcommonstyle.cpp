@@ -2234,7 +2234,10 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt,
             else if (vopt->state & QStyle::State_Selected)
                 mode = QIcon::Selected;
             QIcon::State state = vopt->state & QStyle::State_Open ? QIcon::On : QIcon::Off;
-            vopt->icon.paint(p, iconRect, vopt->decorationAlignment, mode, state);
+            QWindow *window = vopt->widget ? vopt->widget->window()->windowHandle() : 0;
+            QSize size = vopt->icon.actualSize(window, iconRect.size(), mode, state);
+            QRect rect = alignedRect(p->layoutDirection(), vopt->decorationAlignment, size, iconRect);
+            p->drawPixmap(rect, vopt->icon.pixmap(window, size, mode, state));
 
             // draw the text
             if (!vopt->text.isEmpty()) {

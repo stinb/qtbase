@@ -678,8 +678,10 @@ void QItemDelegate::drawDecoration(QPainter *painter, const QStyleOptionViewItem
     Q_D(const QItemDelegate);
     // if we have an icon, we ignore the pixmap
     if (!d->tmp.icon.isNull()) {
-        d->tmp.icon.paint(painter, rect, option.decorationAlignment,
-                          d->tmp.mode, d->tmp.state);
+        QWindow *window = option.widget ? option.widget->window()->windowHandle() : 0;
+        QSize size = d->tmp.icon.actualSize(window, rect.size(), d->tmp.mode, d->tmp.state);
+        QRect alignedRect = QStyle::alignedRect(option.direction, option.decorationAlignment, size, rect);
+        painter->drawPixmap(alignedRect, d->tmp.icon.pixmap(window, size, d->tmp.mode, d->tmp.state));
         return;
     }
 
