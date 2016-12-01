@@ -68,11 +68,6 @@ NSString *qt_mac_removePrivateUnicode(NSString* string)
     return string;
 }
 
-static inline QCocoaMenuLoader *getMenuLoader()
-{
-    return [NSApp QT_MANGLE_NAMESPACE(qt_qcocoamenuLoader)];
-}
-
 QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(QCocoaMenuDelegate) : NSObject <NSMenuDelegate> {
@@ -414,8 +409,7 @@ void QCocoaMenu::syncMenuItem(QPlatformMenuItem *menuItem)
     }
 
     bool wasMerged = cocoaItem->isMerged();
-    NSMenu *oldMenu = wasMerged ? [getMenuLoader() applicationMenu] : m_nativeMenu;
-    NSMenuItem *oldItem = [oldMenu itemWithTag:(NSInteger) cocoaItem];
+    NSMenuItem *oldItem = cocoaItem->nsItem();
 
     if (cocoaItem->sync() != oldItem) {
         // native item was changed for some reason
