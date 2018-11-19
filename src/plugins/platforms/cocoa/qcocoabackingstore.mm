@@ -106,8 +106,13 @@ void QCocoaBackingStore::flush(QWindow *window, const QRegion &region, const QPo
     // Prevent potentially costly color conversion by assigning the display color space
     // to the backingstore image. This does not copy the underlying image data.
     CGColorSpaceRef displayColorSpace = view.window.screen.colorSpace.CGColorSpace;
-    QCFType<CGImageRef> cgImage = CGImageCreateCopyWithColorSpace(
-        QCFType<CGImageRef>(m_image.toCGImage()), displayColorSpace);
+    QCFType<CGDataProviderRef> dataProvider =
+        CGDataProviderCreateWithData(nil, m_image.bits(), m_image.sizeInBytes(), nil);
+    QCFType<CGImageRef> cgImage = CGImageCreate(
+        m_image.width(), m_image.height(), 8, 32,
+        m_image.bytesPerLine(), displayColorSpace,
+        kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
+        dataProvider, nil, false, kCGRenderingIntentDefault);
 
     if (view.layer) {
         // In layer-backed mode, locking focus on a view does not give the right
